@@ -1,0 +1,369 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Authenticated PersonaLens user profile.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Display name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 254,
+          "description": "Verified account email."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of user creation."
+        }
+      },
+      "required": ["id", "name", "email", "createdAt"]
+    },
+    "Persona": {
+      "title": "Persona",
+      "description": "Read-only historical figure analytical lens card.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Slug identifier for the historical persona."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Full name of historical figure."
+        },
+        "lensSummary": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 600,
+          "description": "Concise summary of their philosophical and practical lens."
+        },
+        "corePrinciples": {
+          "type": "array",
+          "description": "Documented core principles (1 to 10 items)."
+        },
+        "decisionPattern": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 1500,
+          "description": "Documented pattern of weighing trade-offs and deciding."
+        },
+        "communicationStyle": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 1500,
+          "description": "Documented rhetorical and interpersonal communication style."
+        },
+        "blindSpots": {
+          "type": "array",
+          "description": "Documented historical or philosophical blind spots (1 to 10 items)."
+        },
+        "sources": {
+          "type": "array",
+          "description": "Primary historical texts and public writings (1 to 10 items)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "lensSummary",
+        "corePrinciples",
+        "decisionPattern",
+        "communicationStyle",
+        "blindSpots",
+        "sources"
+      ]
+    },
+    "EvidenceItem": {
+      "title": "EvidenceItem",
+      "description": "Read-only evidence-based communication research framework.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Slug identifier for the evidence framework."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 160,
+          "description": "Framework or research finding title."
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 1500,
+          "description": "Concise explanation of the research mechanism."
+        },
+        "whenItHelps": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 1200,
+          "description": "Situations where empirical evidence supports this approach."
+        },
+        "limits": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 1200,
+          "description": "Known boundaries, caveats, or failure modes."
+        },
+        "evidenceStrength": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 120,
+          "description": "Research strength classification."
+        },
+        "source": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 500,
+          "description": "Peer-reviewed or foundational research citation."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "summary",
+        "whenItHelps",
+        "limits",
+        "evidenceStrength",
+        "source"
+      ]
+    },
+    "Situation": {
+      "title": "Situation",
+      "description": "Real-life interpersonal or decision situation authored by a user.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Unique situation ID."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160,
+          "description": "Short situation headline."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 15,
+          "maxLength": 4000,
+          "description": "Detailed description of the situation, message, or conflict."
+        },
+        "desiredOutcome": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 1000,
+          "description": "What the user hopes to achieve."
+        },
+        "otherPersonRole": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 200,
+          "description": "Role or relationship of the other person involved."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of situation creation."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "description",
+        "desiredOutcome",
+        "otherPersonRole",
+        "createdAt"
+      ]
+    },
+    "Analysis": {
+      "title": "Analysis",
+      "description": "Persona analysis, suggested response, and evidence-based Reality Check.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Unique analysis ID."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "situationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Referenced situation document ID."
+        },
+        "personaId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Referenced persona document ID."
+        },
+        "personaView": {
+          "type": "object",
+          "description": "Structured persona interpretation: framing, principleApplication, blindSpotWarning."
+        },
+        "suggestedResponse": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 4000,
+          "description": "Suggested draft message or action plan."
+        },
+        "realityCheck": {
+          "type": "object",
+          "description": "Comparison against evidenceLibrary: assessment, evidenceIdsUsed, researchComparison, risksAndLimits."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of analysis creation."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "situationId",
+        "personaId",
+        "personaView",
+        "suggestedResponse",
+        "realityCheck",
+        "createdAt"
+      ]
+    },
+    "Rehearsal": {
+      "title": "Rehearsal",
+      "description": "Larp Mode back-and-forth rehearsal transcript and coaching feedback.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Unique rehearsal ID."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "situationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Referenced situation document ID."
+        },
+        "personaId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Referenced persona document ID."
+        },
+        "messages": {
+          "type": "array",
+          "description": "Bounded transcript messages (role, text, timestamp), up to 60 entries."
+        },
+        "feedback": {
+          "type": "string",
+          "maxLength": 5000,
+          "description": "Final coaching summary once rehearsal concludes."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of rehearsal creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest update."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "situationId",
+        "personaId",
+        "messages",
+        "feedback",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Private user profiles keyed by Firebase Auth UID."
+    },
+    "/personas/{personaId}": {
+      "schema": { "$ref": "#/entities/Persona" },
+      "description": "Read-only historical persona cards used for analysis and coaching."
+    },
+    "/evidenceLibrary/{evidenceId}": {
+      "schema": { "$ref": "#/entities/EvidenceItem" },
+      "description": "Read-only evidence-based communication research library."
+    },
+    "/situations/{situationId}": {
+      "schema": { "$ref": "#/entities/Situation" },
+      "description": "Per-user private situations."
+    },
+    "/analyses/{analysisId}": {
+      "schema": { "$ref": "#/entities/Analysis" },
+      "description": "Per-user private Living Your Day analysis outputs."
+    },
+    "/rehearsals/{rehearsalId}": {
+      "schema": { "$ref": "#/entities/Rehearsal" },
+      "description": "Per-user private Larp Mode rehearsal transcripts and feedback."
+    }
+  }
+}

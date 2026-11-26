@@ -1,0 +1,6 @@
+{
+  "name": "PersonaLens",
+  "description": "Live your day through someone else’s mind. Analyze real-life situations through historical figures' documented philosophies and compare them with evidence-based communication research.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

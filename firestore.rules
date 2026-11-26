@@ -1,0 +1,363 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() &&
+        request.auth.token.email in [
+          'youssef.elshafei1@gmail.com',
+          'youssef.rocks2014@gmail.com'
+        ];
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string &&
+        id.size() >= 1 &&
+        id.size() <= 128 &&
+        id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidStringList(arr, minLen, maxLen, maxItemLen) {
+      return arr is list &&
+        arr.size() >= minLen &&
+        arr.size() <= maxLen &&
+        (arr.size() == 0 || (arr[0] is string && arr[0].size() >= 1 && arr[0].size() <= maxItemLen));
+    }
+
+    // Validation Blueprints
+    function isValidUser(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'name', 'email', 'createdAt']) &&
+        isValidId(data.id) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 254 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidPersona(data) {
+      return data.keys().hasAll([
+          'id', 'name', 'lensSummary', 'corePrinciples',
+          'decisionPattern', 'communicationStyle', 'blindSpots', 'sources'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'name', 'lensSummary', 'corePrinciples',
+          'decisionPattern', 'communicationStyle', 'blindSpots', 'sources'
+        ]) &&
+        isValidId(data.id) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        data.lensSummary is string && data.lensSummary.size() >= 10 && data.lensSummary.size() <= 600 &&
+        isValidStringList(data.corePrinciples, 1, 10, 300) &&
+        data.decisionPattern is string && data.decisionPattern.size() >= 10 && data.decisionPattern.size() <= 1500 &&
+        data.communicationStyle is string && data.communicationStyle.size() >= 10 && data.communicationStyle.size() <= 1500 &&
+        isValidStringList(data.blindSpots, 1, 10, 300) &&
+        isValidStringList(data.sources, 1, 10, 300);
+    }
+
+    function isValidEvidenceItem(data) {
+      return data.keys().hasAll([
+          'id', 'name', 'summary', 'whenItHelps',
+          'limits', 'evidenceStrength', 'source'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'name', 'summary', 'whenItHelps',
+          'limits', 'evidenceStrength', 'source'
+        ]) &&
+        isValidId(data.id) &&
+        data.name is string && data.name.size() >= 2 && data.name.size() <= 160 &&
+        data.summary is string && data.summary.size() >= 10 && data.summary.size() <= 1500 &&
+        data.whenItHelps is string && data.whenItHelps.size() >= 10 && data.whenItHelps.size() <= 1200 &&
+        data.limits is string && data.limits.size() >= 10 && data.limits.size() <= 1200 &&
+        data.evidenceStrength is string && data.evidenceStrength.size() >= 3 && data.evidenceStrength.size() <= 120 &&
+        data.source is string && data.source.size() >= 5 && data.source.size() <= 500;
+    }
+
+    function isValidSituation(data) {
+      return data.keys().hasAll([
+          'id', 'userId', 'title', 'description',
+          'desiredOutcome', 'otherPersonRole', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'userId', 'title', 'description',
+          'desiredOutcome', 'otherPersonRole', 'createdAt'
+        ]) &&
+        isValidId(data.id) &&
+        isValidId(data.userId) &&
+        data.title is string && data.title.size() >= 3 && data.title.size() <= 160 &&
+        data.description is string && data.description.size() >= 15 && data.description.size() <= 4000 &&
+        data.desiredOutcome is string && data.desiredOutcome.size() >= 5 && data.desiredOutcome.size() <= 1000 &&
+        data.otherPersonRole is string && data.otherPersonRole.size() >= 2 && data.otherPersonRole.size() <= 200 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidPersonaViewMap(pv) {
+      return pv is map &&
+        pv.keys().hasAll(['framing', 'principleApplication', 'blindSpotWarning']) &&
+        pv.keys().hasOnly(['framing', 'principleApplication', 'blindSpotWarning']) &&
+        pv.framing is string && pv.framing.size() >= 10 && pv.framing.size() <= 3000 &&
+        pv.principleApplication is string && pv.principleApplication.size() >= 10 && pv.principleApplication.size() <= 3000 &&
+        pv.blindSpotWarning is string && pv.blindSpotWarning.size() >= 10 && pv.blindSpotWarning.size() <= 2000;
+    }
+
+    function isValidRealityCheckMap(rc) {
+      return rc is map &&
+        rc.keys().hasAll(['assessment', 'evidenceIdsUsed', 'researchComparison', 'risksAndLimits']) &&
+        rc.keys().hasOnly(['assessment', 'evidenceIdsUsed', 'researchComparison', 'risksAndLimits']) &&
+        rc.assessment is string && rc.assessment.size() >= 10 && rc.assessment.size() <= 3000 &&
+        isValidStringList(rc.evidenceIdsUsed, 0, 8, 128) &&
+        rc.researchComparison is string && rc.researchComparison.size() >= 10 && rc.researchComparison.size() <= 3000 &&
+        rc.risksAndLimits is string && rc.risksAndLimits.size() >= 10 && rc.risksAndLimits.size() <= 2500;
+    }
+
+    function isValidAnalysis(data) {
+      return data.keys().hasAll([
+          'id', 'userId', 'situationId', 'personaId',
+          'personaView', 'suggestedResponse', 'realityCheck', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'userId', 'situationId', 'personaId',
+          'personaView', 'suggestedResponse', 'realityCheck', 'createdAt'
+        ]) &&
+        isValidId(data.id) &&
+        isValidId(data.userId) &&
+        isValidId(data.situationId) &&
+        isValidId(data.personaId) &&
+        isValidPersonaViewMap(data.personaView) &&
+        data.suggestedResponse is string && data.suggestedResponse.size() >= 10 && data.suggestedResponse.size() <= 4000 &&
+        isValidRealityCheckMap(data.realityCheck) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidMessageShape(msg) {
+      return msg is map &&
+        msg.keys().hasAll(['role', 'text', 'timestamp']) &&
+        msg.keys().hasOnly(['role', 'text', 'timestamp']) &&
+        msg.role in ['user', 'other_person', 'coach'] &&
+        msg.text is string && msg.text.size() >= 1 && msg.text.size() <= 4000 &&
+        msg.timestamp is string && msg.timestamp.size() >= 4 && msg.timestamp.size() <= 64;
+    }
+
+    function isValidRehearsal(data) {
+      return data.keys().hasAll([
+          'id', 'userId', 'situationId', 'personaId',
+          'messages', 'feedback', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'userId', 'situationId', 'personaId',
+          'messages', 'feedback', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        isValidId(data.userId) &&
+        isValidId(data.situationId) &&
+        isValidId(data.personaId) &&
+        data.messages is list &&
+        data.messages.size() <= 60 &&
+        (data.messages.size() == 0 || isValidMessageShape(data.messages[0])) &&
+        data.feedback is string && data.feedback.size() <= 5000 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // Collection: users
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isOwner(userId) &&
+        isValidUser(incoming()) &&
+        incoming().id == userId &&
+        incoming().email == request.auth.token.email &&
+        incoming().createdAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isOwner(userId) &&
+        isValidUser(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().email == request.auth.token.email &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email']);
+      allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
+    }
+
+    // Collection: personas (read-only for regular users; one-time canonical seed create allowed if missing)
+    match /personas/{personaId} {
+      allow get: if isSignedIn() && isValidId(personaId);
+      allow list: if isSignedIn();
+      allow create: if (
+          isAdmin() ||
+          (
+            isVerifiedUser() &&
+            personaId in [
+              'marcus-aurelius',
+              'nelson-mandela',
+              'abraham-lincoln',
+              'marie-curie',
+              'ibn-khaldun',
+              'benjamin-franklin',
+              'frederick-douglass'
+            ]
+          )
+        ) &&
+        isValidId(personaId) &&
+        isValidPersona(incoming()) &&
+        incoming().id == personaId;
+      allow update: if isAdmin() &&
+        isValidId(personaId) &&
+        isValidPersona(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'lensSummary', 'corePrinciples', 'decisionPattern',
+          'communicationStyle', 'blindSpots', 'sources'
+        ]);
+      allow delete: if isAdmin() && isValidId(personaId);
+    }
+
+    // Collection: evidenceLibrary (read-only for regular users; one-time canonical seed create allowed if missing)
+    match /evidenceLibrary/{evidenceId} {
+      allow get: if isSignedIn() && isValidId(evidenceId);
+      allow list: if isSignedIn();
+      allow create: if (
+          isAdmin() ||
+          (
+            isVerifiedUser() &&
+            evidenceId in [
+              'active-reflective-listening',
+              'motivational-interviewing',
+              'dear-man-assertiveness',
+              'principled-negotiation',
+              'softened-startup-repair',
+              'perspective-getting',
+              'affect-labeling',
+              'implementation-intentions',
+              'nonviolent-communication'
+            ]
+          )
+        ) &&
+        isValidId(evidenceId) &&
+        isValidEvidenceItem(incoming()) &&
+        incoming().id == evidenceId;
+      allow update: if isAdmin() &&
+        isValidId(evidenceId) &&
+        isValidEvidenceItem(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'summary', 'whenItHelps', 'limits', 'evidenceStrength', 'source'
+        ]);
+      allow delete: if isAdmin() && isValidId(evidenceId);
+    }
+
+    // Collection: situations (per-user private)
+    match /situations/{situationId} {
+      allow get: if isSignedIn() &&
+        isValidId(situationId) &&
+        existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(situationId) &&
+        isValidSituation(incoming()) &&
+        incoming().id == situationId &&
+        incoming().userId == request.auth.uid &&
+        incoming().createdAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(situationId) &&
+        isValidSituation(incoming()) &&
+        existing().userId == request.auth.uid &&
+        incoming().id == existing().id &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'description', 'desiredOutcome', 'otherPersonRole'
+        ]);
+      allow delete: if isSignedIn() &&
+        isValidId(situationId) &&
+        existing().userId == request.auth.uid;
+    }
+
+    // Collection: analyses (per-user private)
+    match /analyses/{analysisId} {
+      allow get: if isSignedIn() &&
+        isValidId(analysisId) &&
+        existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(analysisId) &&
+        isValidAnalysis(incoming()) &&
+        incoming().id == analysisId &&
+        incoming().userId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        exists(/databases/$(database)/documents/situations/$(incoming().situationId)) &&
+        get(/databases/$(database)/documents/situations/$(incoming().situationId)).data.userId == request.auth.uid &&
+        exists(/databases/$(database)/documents/personas/$(incoming().personaId));
+      allow update: if false;
+      allow delete: if isSignedIn() &&
+        isValidId(analysisId) &&
+        existing().userId == request.auth.uid;
+    }
+
+    // Collection: rehearsals (per-user private, stretch Larp Mode)
+    match /rehearsals/{rehearsalId} {
+      allow get: if isSignedIn() &&
+        isValidId(rehearsalId) &&
+        existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(rehearsalId) &&
+        isValidRehearsal(incoming()) &&
+        incoming().id == rehearsalId &&
+        incoming().userId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/situations/$(incoming().situationId)) &&
+        get(/databases/$(database)/documents/situations/$(incoming().situationId)).data.userId == request.auth.uid &&
+        exists(/databases/$(database)/documents/personas/$(incoming().personaId));
+      allow update: if isVerifiedUser() &&
+        isValidId(rehearsalId) &&
+        isValidRehearsal(incoming()) &&
+        existing().userId == request.auth.uid &&
+        incoming().id == existing().id &&
+        incoming().userId == existing().userId &&
+        incoming().situationId == existing().situationId &&
+        incoming().personaId == existing().personaId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (existing().feedback == '' &&
+            incoming().feedback == '' &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['messages', 'updatedAt'])) ||
+          (existing().feedback == '' &&
+            incoming().feedback.size() > 0 &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['feedback', 'updatedAt']))
+        );
+      allow delete: if isSignedIn() &&
+        isValidId(rehearsalId) &&
+        existing().userId == request.auth.uid;
+    }
+  }
+}
